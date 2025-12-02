@@ -12,6 +12,7 @@ const Register = () => {
   const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth);
   const [formData, setFormData] = useState({
+    username: '',
     email: '',
     password: '',
     password2: '',
@@ -19,27 +20,53 @@ const Register = () => {
     last_name: '',
     phone_number: '',
     user_type: 'customer',
+    address: '',
   });
   const [errors, setErrors] = useState({});
+  const [nonFieldError, setNonFieldError] = useState('');
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: '' });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: '' }));
+    setNonFieldError('');
   };
 
   const validate = () => {
     const newErrors = {};
+    if (!formData.username) newErrors.username = 'Username is required';
+    else if (formData.username.length < 3) newErrors.username = 'Username must be at least 3 characters';
     if (!formData.email) newErrors.email = 'Email is required';
     if (!formData.password) newErrors.password = 'Password is required';
-    if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+    else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
     if (formData.password !== formData.password2) newErrors.password2 = 'Passwords do not match';
     if (!formData.first_name) newErrors.first_name = 'First name is required';
     if (!formData.last_name) newErrors.last_name = 'Last name is required';
     return newErrors;
   };
 
+  const mapServerErrors = (serverData) => {
+    const mapped = {};
+    if (!serverData || typeof serverData !== 'object') {
+      return { non_field_errors: 'Registration failed' };
+    }
+    // DRF often returns { field: ["msg1", "msg2"], non_field_errors: ["..."], detail: "..." }
+    for (const key of Object.keys(serverData)) {
+      const val = serverData[key];
+      if (Array.isArray(val)) {
+        mapped[key] = val.join(' ');
+      } else if (typeof val === 'object') {
+        mapped[key] = Object.values(val).flat().join(' ') || JSON.stringify(val);
+      } else {
+        mapped[key] = String(val);
+      }
+    }
+    return mapped;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setNonFieldError('');
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -47,9 +74,63 @@ const Register = () => {
     }
 
     try {
-      await dispatch(register(formData)).unwrap();
+      // send exactly the fields the serializer expects
+      const payload = {
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+        password2: formData.password2,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone_number: formData.phone_number,
+        user_type: formData.user_type,
+        address: formData.address,
+      };
+
+      await dispatch(register(payload)).unwrap();
       navigate(ROUTES.LOGIN);
     } catch (error) {
+      // handle common thunk/axios/rejectWithValue shapes
+      // possible shapes:
+      // - error.response.data (axios)
+      // - error.payload (createAsyncThunk rejectWithValue)
+      // - error.data
+      // - error (plain object or string)
+      let serverData = null;
+
+      if (error?.response?.data) {
+        serverData = error.response.data;
+      } else if (error?.payload) {
+        serverData = error.payload;
+      } else if (error?.data) {
+        serverData = error.data;
+      } else if (typeof error === 'object' && Object.keys(error).length > 0) {
+        serverData = error;
+      }
+
+      if (serverData) {
+        const mapped = mapServerErrors(serverData);
+
+        // Pull out generic messages
+        if (mapped.non_field_errors) {
+          setNonFieldError(mapped.non_field_errors);
+          delete mapped.non_field_errors;
+        } else if (mapped.detail) {
+          setNonFieldError(mapped.detail);
+          delete mapped.detail;
+        } else if (mapped.error) {
+          setNonFieldError(mapped.error);
+          delete mapped.error;
+        }
+
+        setErrors((prev) => ({ ...prev, ...mapped }));
+      } else {
+        // fallback
+        setNonFieldError(typeof error === 'string' ? error : 'Registration failed. Please try again.');
+      }
+
+      // keep console for debugging
+      // eslint-disable-next-line no-console
       console.error('Registration failed:', error);
     }
   };
@@ -57,8 +138,25 @@ const Register = () => {
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Create your account</h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
+
+      {nonFieldError && (
+        <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">
+          {nonFieldError}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <Input
+          label="Username"
+          type="text"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          error={errors.username}
+          icon={<FiUser className="text-gray-400" />}
+          required
+        />
+
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="First Name"
@@ -105,6 +203,16 @@ const Register = () => {
         />
 
         <Input
+          label="Address (optional)"
+          type="text"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          error={errors.address}
+          icon={<FiUser className="text-gray-400" />}
+        />
+
+        <Input
           label="Password"
           type="password"
           name="password"
@@ -127,9 +235,7 @@ const Register = () => {
         />
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            I want to
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">I want to</label>
           <div className="flex space-x-4">
             <label className="flex items-center">
               <input
