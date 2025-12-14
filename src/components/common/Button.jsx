@@ -6,6 +6,7 @@ const Button = ({
   onClick, 
   disabled = false,
   loading = false,
+  fullWidth = false,
   className = '',
   ...props 
 }) => {
@@ -26,13 +27,14 @@ const Button = ({
     lg: 'px-6 py-3 text-lg',
   };
 
+  const widthStyle = fullWidth ? 'w-full' : '';
+
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
-      {...props}
+      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${widthStyle} ${className}`}
     >
       {loading ? (
         <span className="flex items-center justify-center">

@@ -11,8 +11,11 @@ const Input = ({
   disabled = false,
   className = '',
   icon,
+  leftIcon,
   ...props
 }) => {
+  const iconElement = leftIcon || icon;
+  
   return (
     <div className={`mb-4 ${className}`}>
       {label && (
@@ -22,7 +25,12 @@ const Input = ({
         </label>
       )}
       <div className="relative">
-        {icon && (
+        {leftIcon && (
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            {leftIcon}
+          </div>
+        )}
+        {icon && !leftIcon && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             {icon}
           </div>
@@ -38,11 +46,10 @@ const Input = ({
           disabled={disabled}
           className={`
             w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-            ${icon ? 'pl-10' : ''}
+            ${iconElement ? 'pl-10' : ''}
             ${error ? 'border-red-500' : 'border-gray-300'}
             ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
           `}
-          {...props}
         />
       </div>
       {error && (

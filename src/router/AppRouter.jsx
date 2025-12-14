@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ROUTES } from '@utils/constants';
 import Loading from '@components/common/Loading';
@@ -12,9 +12,10 @@ import ProviderDashboardLayout from '@layouts/ProviderDashboardLayout';
 
 // Lazy load pages
 const Home = lazy(() => import('@pages/home/Home'));
-const Login = lazy(() => import('@pages/auth/Login'));
-const Register = lazy(() => import('@pages/auth/Register'));
-const ForgotPassword = lazy(() => import('@pages/auth/ForgotPassword'));
+const LoginPage = lazy(() => import('@pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('@pages/auth/RegisterPage'));
+const OTPTestPage = lazy(() => import('@pages/auth/OTPTestPage'));
+const Dashboard = lazy(() => import('@pages/Dashboard'));
 const Profile = lazy(() => import('@pages/user/Profile'));
 const EditProfile = lazy(() => import('@pages/user/EditProfile'));
 const MyBookings = lazy(() => import('@pages/user/MyBookings'));
@@ -36,18 +37,21 @@ const Availability = lazy(() => import('@pages/provider/Availability'));
 
 const AppRouter = () => {
   return (
-    <Router>
-      <Suspense fallback={<Loading fullScreen />}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path={ROUTES.HOME} element={<Home />} />
-          
-          {/* Auth Routes */}
-          <Route element={<AuthLayout />}>
-            <Route path={ROUTES.LOGIN} element={<Login />} />
-            <Route path={ROUTES.REGISTER} element={<Register />} />
-            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
-          </Route>
+    <Suspense fallback={<Loading fullScreen />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path={ROUTES.HOME} element={<Home />} />
+        
+        {/* Authentication - Separate Login and Register Pages */}
+        <Route path="/auth" element={<LoginPage />} />
+        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+        <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+        
+        {/* OTP Test Page - Remove in production */}
+        <Route path="/otp-test" element={<OTPTestPage />} />
+
+        {/* Dashboard */}
+        <Route path="/dashboard" element={<Dashboard />} />
 
           {/* Provider Public Pages */}
           <Route path="/providers" element={<ProviderList />} />
@@ -81,11 +85,10 @@ const AppRouter = () => {
             </Route>
           </Route>
 
-          {/* 404 */}
-          <Route path="*" element={<div className="flex items-center justify-center h-screen"><h1 className="text-2xl">404 - Page Not Found</h1></div>} />
-        </Routes>
-      </Suspense>
-    </Router>
+        {/* 404 */}
+        <Route path="*" element={<div className="flex items-center justify-center h-screen"><h1 className="text-2xl">404 - Page Not Found</h1></div>} />
+      </Routes>
+    </Suspense>
   );
 };
 

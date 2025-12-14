@@ -1,32 +1,35 @@
 import axiosClient from './axiosClient';
 
 export const authApi = {
-  // Register new user
-  register: (data) => axiosClient.post('http://127.0.0.1:8000/api/users/register/', data),
+  // Send OTP to phone number
+  sendOTP: (phoneNumber) => 
+    axiosClient.post('/users/send-otp/', { phone: phoneNumber }),
 
-  // Login user
-  login: (credentials) => axiosClient.post('http://127.0.0.1:8000/api/users/login/', credentials),
+  // Verify OTP and login/register
+  verifyOTP: (phoneNumber, otp, profileData = {}) => 
+    axiosClient.post('/users/verify-otp/', { 
+      phone: phoneNumber, 
+      otp: otp,
+      ...profileData  // Optional: first_name, last_name, email
+    }),
 
   // Logout user
-  logout: () => axiosClient.post('http://127.0.0.1:8000/api/users/logout/'),
+  logout: (refreshToken) => 
+    axiosClient.post('/users/logout/', { refresh: refreshToken }),
 
-  // Refresh token
+  // Refresh access token
   refreshToken: (refreshToken) => 
-    axiosClient.post('http://127.0.0.1:8000/api/users/token/refresh/', { refresh: refreshToken }),
+    axiosClient.post('/users/token/refresh/', { refresh: refreshToken }),
 
-  // Request password reset
-  forgotPassword: (email) => 
-    axiosClient.post('http://127.0.0.1:8000/api/users/password-reset/', { email }),
+  // Get user profile
+  getProfile: () => 
+    axiosClient.get('/users/profile/'),
 
-  // Reset password with token
-  resetPassword: (data) => 
-    axiosClient.post('http://127.0.0.1:8000/api/users/password-reset/confirm/', data),
+  // Update user profile
+  updateProfile: (data) => 
+    axiosClient.patch('/users/profile/', data),
 
-  // Verify email
-  verifyEmail: (token) => 
-    axiosClient.post('http://127.0.0.1:8000/api/users/verify-email/', { token }),
-
-  // Resend verification email
-  resendVerification: (email) => 
-    axiosClient.post('http://127.0.0.1:8000/api/users/resend-verification/', { email }),
+  // Google login with Firebase
+  googleLogin: (token) => 
+    axiosClient.post('/users/google/', { token }),
 };
