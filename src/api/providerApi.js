@@ -7,62 +7,38 @@ export const providerApi = {
   // Get provider by ID
   getProviderById: (id) => axiosClient.get(`/providers/${id}/`),
 
+  // Get my provider profile
+  getMyProfile: () => axiosClient.get('/providers/me/'),
+
   // Create provider profile
   createProvider: (data) => axiosClient.post('/providers/create/', data),
 
   // Update provider profile
-  updateProvider: (id, data) => axiosClient.put(`/providers/${id}/`, data),
+  updateProvider: (data) => axiosClient.put('/providers/me/update/', data),
 
-  // Get provider services
-  getProviderServices: (providerId) => 
-    axiosClient.get(`/providers/${providerId}/services/`),
+  // Partial update provider profile
+  patchProvider: (data) => axiosClient.patch('/providers/me/update/', data),
 
-  // Add service
-  addService: (providerId, data) => 
-    axiosClient.post(`/providers/${providerId}/services/`, data),
-
-  // Update service
-  updateService: (providerId, serviceId, data) => 
-    axiosClient.put(`/providers/${providerId}/services/${serviceId}/`, data),
-
-  // Delete service
-  deleteService: (providerId, serviceId) => 
-    axiosClient.delete(`/providers/${providerId}/services/${serviceId}/`),
-
-  // Get service categories
+  // Service categories
   getCategories: () => axiosClient.get('/providers/categories/'),
+  getCategoryById: (id) => axiosClient.get(`/providers/categories/${id}/`),
 
-  // Get provider availability
-  getAvailability: (providerId) => 
-    axiosClient.get(`/providers/${providerId}/availability/`),
+  // Provider availability
+  getAvailability: () => axiosClient.get('/providers/availability/'),
+  createAvailability: (data) => axiosClient.post('/providers/availability/', data),
+  updateAvailability: (id, data) => axiosClient.put(`/providers/availability/${id}/`, data),
+  deleteAvailability: (id) => axiosClient.delete(`/providers/availability/${id}/`),
 
-  // Update availability
-  updateAvailability: (providerId, data) => 
-    axiosClient.post(`/providers/${providerId}/availability/`, data),
-
-  // Get provider portfolio
-  getPortfolio: (providerId) => 
-    axiosClient.get(`/providers/${providerId}/portfolio/`),
-
-  // Add portfolio item
-  addPortfolioItem: (providerId, formData) => 
-    axiosClient.post(`/providers/${providerId}/portfolio/`, formData, {
+  // Provider portfolio
+  getPortfolio: () => axiosClient.get('/providers/portfolio/'),
+  addPortfolioItem: (formData) => 
+    axiosClient.post('/providers/portfolio/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
-
-  // Delete portfolio item
-  deletePortfolioItem: (providerId, itemId) => 
-    axiosClient.delete(`/providers/${providerId}/portfolio/${itemId}/`),
-
-  // Search providers by location
-  searchByLocation: (params) => 
-    axiosClient.get('/providers/search-by-location/', { params }),
-
-  // Get provider reviews
-  getProviderReviews: (providerId, params) => 
-    axiosClient.get(`/providers/${providerId}/reviews/`, { params }),
-
-  // Get provider statistics
-  getProviderStats: (providerId) => 
-    axiosClient.get(`/providers/${providerId}/stats/`),
+  updatePortfolioItem: (id, formData) => 
+    axiosClient.put(`/providers/portfolio/${id}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  deletePortfolioItem: (id) => 
+    axiosClient.delete(`/providers/portfolio/${id}/`),
 };

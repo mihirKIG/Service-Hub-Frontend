@@ -16,6 +16,8 @@ const LoginPage = lazy(() => import('@pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@pages/auth/RegisterPage'));
 const OTPTestPage = lazy(() => import('@pages/auth/OTPTestPage'));
 const Dashboard = lazy(() => import('@pages/Dashboard'));
+const AllServices = lazy(() => import('@pages/services/AllServices'));
+const ServiceDetails = lazy(() => import('@pages/services/ServiceDetails'));
 const Profile = lazy(() => import('@pages/user/Profile'));
 const EditProfile = lazy(() => import('@pages/user/EditProfile'));
 const MyBookings = lazy(() => import('@pages/user/MyBookings'));
@@ -25,6 +27,9 @@ const BookService = lazy(() => import('@pages/booking/BookService'));
 const BookingSuccess = lazy(() => import('@pages/booking/BookingSuccess'));
 const Checkout = lazy(() => import('@pages/payment/Checkout'));
 const PaymentHistory = lazy(() => import('@pages/payment/PaymentHistory'));
+const PaymentSuccess = lazy(() => import('@pages/payment/PaymentSuccess'));
+const PaymentFail = lazy(() => import('@pages/payment/PaymentFail'));
+const PaymentCancel = lazy(() => import('@pages/payment/PaymentCancel'));
 const ChatRoom = lazy(() => import('@pages/chat/ChatRoom'));
 const ChatList = lazy(() => import('@pages/chat/ChatList'));
 const AddReview = lazy(() => import('@pages/review/AddReview'));
@@ -53,6 +58,21 @@ const AppRouter = () => {
         {/* Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
 
+        {/* Payment Callback Routes - Public */}
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/fail" element={<PaymentFail />} />
+        <Route path="/payment/cancel" element={<PaymentCancel />} />
+
+        {/* All Services */}
+        <Route path="/services" element={<AllServices />} />
+        <Route path="/services/:category" element={<AllServices />} />
+        <Route path="/service/:serviceId" element={<ServiceDetails />} />
+        
+        {/* Booking Routes - Standalone */}
+        <Route path="/book/:providerId" element={<BookService />} />
+        <Route path="/book-service/:serviceId" element={<BookService />} />
+        <Route path="/booking/success" element={<BookingSuccess />} />
+
           {/* Provider Public Pages */}
           <Route path="/providers" element={<ProviderList />} />
           <Route path="/providers/:id" element={<ProviderDetail />} />
@@ -63,8 +83,6 @@ const AppRouter = () => {
               <Route path={ROUTES.PROFILE} element={<Profile />} />
               <Route path={ROUTES.EDIT_PROFILE} element={<EditProfile />} />
               <Route path={ROUTES.MY_BOOKINGS} element={<MyBookings />} />
-              <Route path="/book/:providerId" element={<BookService />} />
-              <Route path="/booking/success" element={<BookingSuccess />} />
               <Route path={ROUTES.PAYMENT} element={<Checkout />} />
               <Route path={ROUTES.PAYMENT_HISTORY} element={<PaymentHistory />} />
               <Route path={ROUTES.CHAT} element={<ChatList />} />

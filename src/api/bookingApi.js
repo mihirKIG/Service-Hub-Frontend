@@ -10,51 +10,33 @@ export const bookingApi = {
   // Create new booking
   createBooking: (data) => axiosClient.post('/bookings/create/', data),
 
-  // Update booking
-  updateBooking: (id, data) => axiosClient.put(`/bookings/${id}/update/`, data),
+  // Update booking (PATCH for partial update)
+  updateBooking: (id, data) => axiosClient.patch(`/bookings/${id}/update/`, data),
 
   // Cancel booking
-  cancelBooking: (id, reason) => 
-    axiosClient.post(`/bookings/${id}/cancel/`, { reason }),
+  cancelBooking: (id, data) => 
+    axiosClient.post(`/bookings/${id}/cancel/`, data),
 
-  // Confirm booking (provider)
-  confirmBooking: (id) => 
-    axiosClient.post(`/bookings/${id}/confirm/`),
-
-  // Mark booking as in progress
-  startBooking: (id) => 
-    axiosClient.post(`/bookings/${id}/start/`),
-
-  // Complete booking
-  completeBooking: (id) => 
-    axiosClient.post(`/bookings/${id}/complete/`),
-
-  // Upload booking attachment
-  uploadAttachment: (id, formData) => 
-    axiosClient.post(`/bookings/${id}/attachments/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
-
-  // Get booking attachments
-  getAttachments: (id) => 
-    axiosClient.get(`/bookings/${id}/attachments/`),
-
-  // Check availability for booking
-  checkAvailability: (providerId, data) => 
-    axiosClient.post(`/bookings/check-availability/`, {
-      provider_id: providerId,
-      ...data,
-    }),
-
-  // Get upcoming bookings
+  // Get upcoming bookings (next 5 upcoming)
   getUpcomingBookings: () => 
     axiosClient.get('/bookings/upcoming/'),
 
-  // Get past bookings
-  getPastBookings: (params) => 
-    axiosClient.get('/bookings/past/', { params }),
+  // Get booking statistics
+  getBookingStats: () => 
+    axiosClient.get('/bookings/stats/'),
 
-  // Reschedule booking
-  rescheduleBooking: (id, data) => 
-    axiosClient.post(`/bookings/${id}/reschedule/`, data),
+  // Booking attachments
+  getAttachments: (bookingId) => 
+    axiosClient.get(`/bookings/${bookingId}/attachments/`),
+
+  createAttachment: (bookingId, formData) => 
+    axiosClient.post(`/bookings/${bookingId}/attachments/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  getAttachment: (bookingId, attachmentId) => 
+    axiosClient.get(`/bookings/${bookingId}/attachments/${attachmentId}/`),
+
+  deleteAttachment: (bookingId, attachmentId) => 
+    axiosClient.delete(`/bookings/${bookingId}/attachments/${attachmentId}/`),
 };

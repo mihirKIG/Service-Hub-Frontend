@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import * as authService from '@api/otpService';
 import { signInWithGoogle } from '@config/firebase';
+import { setUser as setReduxUser, clearAuth } from '@features/auth/authSlice';
 
 const AuthContext = createContext(null);
 
@@ -9,7 +11,9 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Check if user is authenticated on mount
   useEffect(() => {
@@ -18,20 +22,25 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('access_token');
       const userData = localStorage.getItem('user');
       
       if (token && userData) {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
         setIsAuthenticated(true);
+        // Sync with Redux
+        dispatch(setReduxUser(parsedUser));
       } else {
         setIsAuthenticated(false);
         setUser(null);
+        dispatch(clearAuth());
       }
     } catch (error) {
       console.error('Auth check error:', error);
       setIsAuthenticated(false);
       setUser(null);
+      dispatch(clearAuth());
     } finally {
       setLoading(false);
     }
@@ -64,6 +73,8 @@ export const AuthProvider = ({ children }) => {
       if (response.user) {
         setUser(response.user);
         setIsAuthenticated(true);
+        // Sync with Redux
+        dispatch(setReduxUser(response.user));
       }
       
       return { success: true, data: response };
@@ -96,6 +107,8 @@ export const AuthProvider = ({ children }) => {
       
       // Set user data
       if (response.user) {
+        // Sync with Redux
+        dispatch(setReduxUser(response.user));
         setUser(response.user);
         setIsAuthenticated(true);
       }
@@ -116,12 +129,14 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error);
     } finally {
       // Clear local state
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
+      // Sync with Redux
+      dispatch(clearAuth());
       setUser(null);
       setIsAuthenticated(false);
-      navigate('/auth');
+      navigate('/'); // Redirect to home page after logout
     }
   };
 
@@ -129,6 +144,8 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated,
+    sidebarOpen,
+    setSidebarOpen,
     sendOTP,
     verifyOTP,
     googleLogin,

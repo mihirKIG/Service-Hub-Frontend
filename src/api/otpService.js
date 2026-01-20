@@ -54,10 +54,10 @@ export const verifyOTP = async (phoneNumber, otp, profileData = {}) => {
     
     // Store tokens in localStorage
     if (tokens?.access) {
-      localStorage.setItem('accessToken', tokens.access);
+      localStorage.setItem('access_token', tokens.access);
     }
     if (tokens?.refresh) {
-      localStorage.setItem('refreshToken', tokens.refresh);
+      localStorage.setItem('refresh_token', tokens.refresh);
     }
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
@@ -119,10 +119,10 @@ export const googleLogin = async (idToken, firebaseUser) => {
     
     // Store tokens in localStorage
     if (tokens?.access) {
-      localStorage.setItem('accessToken', tokens.access);
+      localStorage.setItem('access_token', tokens.access);
     }
     if (tokens?.refresh) {
-      localStorage.setItem('refreshToken', tokens.refresh);
+      localStorage.setItem('refresh_token', tokens.refresh);
     }
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
@@ -163,7 +163,7 @@ export const googleLogin = async (idToken, firebaseUser) => {
  */
 export const logout = async () => {
   try {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = localStorage.getItem('refresh_token');
     if (refreshToken) {
       await axiosClient.post('/users/logout/', {
         refresh: refreshToken,
@@ -174,8 +174,8 @@ export const logout = async () => {
     // Continue with local cleanup even if API call fails
   } finally {
     // Clear all authentication data from localStorage
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
   }
 };
@@ -185,7 +185,7 @@ export const logout = async () => {
  * @returns {boolean}
  */
 export const isAuthenticated = () => {
-  return !!localStorage.getItem('accessToken');
+  return !!localStorage.getItem('access_token');
 };
 
 /**

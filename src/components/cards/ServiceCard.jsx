@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiStar, FiMapPin, FiClock, FiEye } from 'react-icons/fi';
 import Button from '@components/common/Button';
+import { useAuth } from '../../context/AuthContext';
 
 const ServiceCard = ({ 
   id, 
@@ -20,6 +21,7 @@ const ServiceCard = ({
   status
 }) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const handleViewDetails = () => {
     navigate(`/service/${id}`);
@@ -28,9 +30,7 @@ const ServiceCard = ({
   const handleBookNow = (e) => {
     e.stopPropagation();
     
-    const token = localStorage.getItem('access_token');
-    
-    if (!token) {
+    if (!isAuthenticated) {
       navigate('/login', { state: { from: `/service/${id}` } });
       return;
     }

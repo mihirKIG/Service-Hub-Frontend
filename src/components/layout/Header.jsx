@@ -5,6 +5,7 @@ import { FiBell, FiMenu, FiX, FiUser, FiLogOut, FiMessageSquare } from 'react-ic
 import { logout } from '@features/auth/authSlice';
 import Avatar from '@components/common/Avatar';
 import { ROUTES } from '@utils/constants';
+import { useAuth } from '@context/AuthContext';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -12,18 +13,30 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { sidebarOpen, setSidebarOpen } = useAuth();
   const { unreadCount } = useSelector((state) => state.notifications);
   const { unreadCount: chatUnreadCount } = useSelector((state) => state.chat);
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate(ROUTES.LOGIN);
+    navigate(ROUTES.HOME);
   };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          {/* Hamburger Menu Button (only show when authenticated) */}
+          {isAuthenticated && (
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors"
+              aria-label="Toggle sidebar"
+            >
+              <FiMenu className="h-6 w-6" />
+            </button>
+          )}
+
           {/* Logo */}
           <Link to={ROUTES.HOME} className="flex items-center">
             <span className="text-2xl font-bold text-primary-600">ServiceHub</span>

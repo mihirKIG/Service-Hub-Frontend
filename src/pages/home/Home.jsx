@@ -3,9 +3,12 @@ import { FiSearch, FiMapPin } from 'react-icons/fi';
 import { useState } from 'react';
 import Header from '@components/layout/Header';
 import Footer from '@components/layout/Footer';
+import Sidebar from '@components/layout/Sidebar';
+import { useAuth } from '@context/AuthContext';
 import { ROUTES } from '@utils/constants';
 
 const Home = () => {
+  const { isAuthenticated, sidebarOpen } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('Dhaka');
 
@@ -18,8 +21,12 @@ const Home = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      {/* Hero Section with Background Image */}
-      <section className="relative h-[500px] bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200")' }}>
+      <div className="flex flex-1">
+        {isAuthenticated && <Sidebar />}
+        
+        <div className={`flex-1 transition-all duration-300 ${isAuthenticated && sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+          {/* Hero Section with Background Image */}
+          <section className="relative h-[500px] bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200")' }}>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white px-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-3 text-center">
             Your Personal Assistant
@@ -66,50 +73,73 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Categories Section with Icons */}
-      <section className="py-12 bg-white">
+      {/* Categories Section - Professional Cards */}
+      <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide">
-            <Link to="/services/ac-repair" className="flex flex-col items-center min-w-[120px] group">
-              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
-                <span className="text-3xl">❄️</span>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Our Services</h2>
+            <p className="text-gray-600">Choose from our wide range of professional services</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <Link to="/services/ac-repair" className="group">
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center border border-gray-100 hover:border-blue-300 transform hover:-translate-y-2">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-5xl">❄️</span>
+                </div>
+                <h3 className="font-semibold text-gray-800 text-base mb-1">AC Repair</h3>
+                <p className="text-xs text-gray-500">Services</p>
               </div>
-              <span className="text-sm font-medium text-gray-700 text-center">AC Repair Services</span>
             </Link>
             
-            <Link to="/services/appliance" className="flex flex-col items-center min-w-[120px] group">
-              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-green-100 transition-colors">
-                <span className="text-3xl">🔧</span>
+            <Link to="/services/appliance" className="group">
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center border border-gray-100 hover:border-green-300 transform hover:-translate-y-2">
+                <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-green-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-5xl">🔧</span>
+                </div>
+                <h3 className="font-semibold text-gray-800 text-base mb-1">Appliance</h3>
+                <p className="text-xs text-gray-500">Repair</p>
               </div>
-              <span className="text-sm font-medium text-gray-700 text-center">Appliance Repair</span>
             </Link>
             
-            <Link to="/services/cleaning" className="flex flex-col items-center min-w-[120px] group">
-              <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-purple-100 transition-colors">
-                <span className="text-3xl">🧹</span>
+            <Link to="/services/cleaning" className="group">
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center border border-gray-100 hover:border-purple-300 transform hover:-translate-y-2">
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-5xl">🧹</span>
+                </div>
+                <h3 className="font-semibold text-gray-800 text-base mb-1">Cleaning</h3>
+                <p className="text-xs text-gray-500">Solution</p>
               </div>
-              <span className="text-sm font-medium text-gray-700 text-center">Cleaning Solution</span>
             </Link>
             
-            <Link to="/services/beauty" className="flex flex-col items-center min-w-[120px] group">
-              <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-pink-100 transition-colors">
-                <span className="text-3xl">💄</span>
+            <Link to="/services/beauty" className="group">
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center border border-gray-100 hover:border-pink-300 transform hover:-translate-y-2">
+                <div className="w-24 h-24 bg-gradient-to-br from-pink-100 to-pink-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-5xl">💄</span>
+                </div>
+                <h3 className="font-semibold text-gray-800 text-base mb-1">Beauty &</h3>
+                <p className="text-xs text-gray-500">Wellness</p>
               </div>
-              <span className="text-sm font-medium text-gray-700 text-center">Beauty & Wellness</span>
             </Link>
             
-            <Link to="/services/shifting" className="flex flex-col items-center min-w-[120px] group">
-              <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-orange-100 transition-colors">
-                <span className="text-3xl">🚚</span>
+            <Link to="/services/shifting" className="group">
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center border border-gray-100 hover:border-orange-300 transform hover:-translate-y-2">
+                <div className="w-24 h-24 bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-5xl">🚚</span>
+                </div>
+                <h3 className="font-semibold text-gray-800 text-base mb-1">Shifting</h3>
+                <p className="text-xs text-gray-500">Services</p>
               </div>
-              <span className="text-sm font-medium text-gray-700 text-center">Shifting</span>
             </Link>
             
-            <Link to="/services/health" className="flex flex-col items-center min-w-[120px] group">
-              <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-red-100 transition-colors">
-                <span className="text-3xl">🏥</span>
+            <Link to="/services/health" className="group">
+              <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center border border-gray-100 hover:border-red-300 transform hover:-translate-y-2">
+                <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-red-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-5xl">🏥</span>
+                </div>
+                <h3 className="font-semibold text-gray-800 text-base mb-1">Health &</h3>
+                <p className="text-xs text-gray-500">Care</p>
               </div>
-              <span className="text-sm font-medium text-gray-700 text-center">Health & Care</span>
             </Link>
           </div>
         </div>
@@ -167,6 +197,8 @@ const Home = () => {
           </div>
         </div>
       </section>
+        </div>
+      </div>
 
       <Footer />
     </div>

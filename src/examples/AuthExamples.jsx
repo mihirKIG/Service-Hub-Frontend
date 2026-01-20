@@ -189,7 +189,7 @@ const LogoutExample = () => {
   const handleLogout = () => {
     logout(); // Clears all tokens from localStorage
     console.log('Logged out successfully');
-    navigate('/login-otp');
+    navigate('/');
   };
 
   return (

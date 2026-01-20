@@ -13,10 +13,17 @@ const ProviderCard = ({ provider }) => {
               src={provider.cover_image}
               alt={provider.business_name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.business_name)}&size=800&background=random`;
+              }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              No image available
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+              <div className="text-center">
+                <div className="text-6xl mb-2">🏢</div>
+                <span className="text-gray-500 text-sm">No image available</span>
+              </div>
             </div>
           )}
         </div>

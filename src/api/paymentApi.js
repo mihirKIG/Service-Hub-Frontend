@@ -7,44 +7,36 @@ export const paymentApi = {
   // Get payment by ID
   getPaymentById: (id) => axiosClient.get(`/payments/${id}/`),
 
-  // Create payment intent
+  // Create payment
   createPayment: (data) => axiosClient.post('/payments/create/', data),
 
-  // Confirm payment
-  confirmPayment: (id, data) => 
-    axiosClient.post(`/payments/${id}/confirm/`, data),
+  // Process refund
+  processRefund: (id, data) => axiosClient.post(`/payments/${id}/refund/`, data),
 
-  // Request refund
-  requestRefund: (id, data) => 
-    axiosClient.post(`/payments/${id}/refund/`, data),
+  // Get payment statistics
+  getStats: () => axiosClient.get('/payments/stats/'),
 
-  // Get payment methods
-  getPaymentMethods: () => 
-    axiosClient.get('/payments/methods/'),
-
-  // Add payment method
-  addPaymentMethod: (data) => 
-    axiosClient.post('/payments/methods/', data),
-
-  // Delete payment method
+  // Payment methods
+  getPaymentMethods: () => axiosClient.get('/payments/methods/'),
+  
+  addPaymentMethod: (data) => axiosClient.post('/payments/methods/', data),
+  
+  updatePaymentMethod: (id, data) => 
+    axiosClient.put(`/payments/methods/${id}/`, data),
+  
   deletePaymentMethod: (id) => 
     axiosClient.delete(`/payments/methods/${id}/`),
-
-  // Set default payment method
+  
   setDefaultPaymentMethod: (id) => 
     axiosClient.post(`/payments/methods/${id}/set-default/`),
 
-  // Get payment history
-  getPaymentHistory: (params) => 
-    axiosClient.get('/payments/history/', { params }),
-
-  // Download receipt
-  downloadReceipt: (id) => 
-    axiosClient.get(`/payments/${id}/receipt/`, {
-      responseType: 'blob',
-    }),
-
-  // Get payment statistics
-  getPaymentStats: () => 
-    axiosClient.get('/payments/stats/'),
+  // SSLCommerz Integration
+  initiatePayment: (data) => 
+    axiosClient.post('/payments/initiate/', data),
+  
+  validatePayment: (data) => 
+    axiosClient.post('/payments/validate/', data),
+  
+  getMyPayments: () => 
+    axiosClient.get('/payments/my-payments/'),
 };
