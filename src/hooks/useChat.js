@@ -72,9 +72,13 @@ export const useChat = (roomId) => {
 
   useEffect(() => {
     if (roomId) {
+      console.log('🔵 useChat: Initializing with room ID:', roomId);
       fetchRoom();
       fetchMessages();
       connectWebSocket();
+    } else {
+      console.log('⚠️ useChat: No room ID provided yet');
+      setLoading(false); // Stop loading if no roomId
     }
 
     return () => {
@@ -95,9 +99,13 @@ export const useChat = (roomId) => {
     try {
       setLoading(true);
       setError(null);
+      console.log('🔵 Fetching messages for room:', roomId);
       const response = await chatApi.getMessages(roomId);
-      setMessages(response.data.results || response.data);
+      const msgs = response.data.results || response.data;
+      console.log('✅ Loaded messages:', msgs.length);
+      setMessages(msgs);
     } catch (err) {
+      console.error('❌ Failed to fetch messages:', err);
       setError(err.response?.data || err.message);
     } finally {
       setLoading(false);

@@ -12,21 +12,32 @@ const axiosClient = axios.create({
 // Request interceptor
 axiosClient.interceptors.request.use(
   (config) => {
+    console.log('🌐 Axios Request:', config.method.toUpperCase(), config.url);
+    console.log('📦 Request data:', config.data);
+    
     const token = storage.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔐 Token attached');
+    } else {
+      console.log('⚠️ No token found');
     }
     return config;
   },
   (error) => {
+    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor
 axiosClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ Response:', response.config.url, response.status);
+    return response;
+  },
   async (error) => {
+    console.error('❌ Response error:', error.config?.url, error.response?.status, error.response?.data);
     const originalRequest = error.config;
 
     // If error is 401 and we haven't tried to refresh token yet

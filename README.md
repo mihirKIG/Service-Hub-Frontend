@@ -70,15 +70,23 @@ src/
 
 ## Features
 
-- 🔐 JWT Authentication
+- 🔐 JWT Authentication (Email/Password & Google OAuth)
+- 🔥 Firebase Integration for Google Sign-In
 - 👤 User & Provider Profiles
 - 📅 Service Booking System
-- 💳 Payment Integration (Stripe)
+- 💳 Payment Integration (SSLCommerz)
 - ⭐ Reviews & Ratings
-- 💬 Real-time Chat
+- 💬 **Real-time Chat (Booking-Based)** - Each booking has its own isolated chat room
 - 🔔 Notifications
 - 📱 Responsive Design
 - 🎨 Modern UI with TailwindCSS
+
+## Key Documentation
+
+- 📖 [Security Setup Guide](SECURITY_SETUP.md) - Environment variables & credentials
+- 💬 [Booking-Based Chat System](BOOKING_BASED_CHAT.md) - Chat architecture & implementation
+- 🔧 [Chat Troubleshooting Guide](CHAT_TROUBLESHOOTING.md) - Fix chat loading issues
+- 🔌 [Backend Chat API Requirements](BACKEND_CHAT_API_REQUIREMENTS.md) - Future enhancements
 
 ## Available Scripts
 

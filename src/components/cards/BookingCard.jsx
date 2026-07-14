@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiUser, FiMessageSquare } from 'react-icons/fi';
 import { formatters } from '@utils/formatters';
 import Button from '@components/common/Button';
 
@@ -54,7 +54,8 @@ const BookingCard = ({ booking, onCancel, onConfirm, showActions = true }) => {
           <div className="flex space-x-2">
             <Link to={`/bookings/${booking.id}`}>
               <Button size="sm" variant="outline">
-                View Details
+                <FiMessageSquare className="inline mr-1" />
+                View & Chat
               </Button>
             </Link>
             {booking.status === 'pending' && onCancel && (

@@ -93,8 +93,9 @@ const NotificationBell = () => {
   };
 
   const handleViewBooking = () => {
-    if (selectedNotification?.booking) {
-      navigate(`/provider-dashboard/bookings/${selectedNotification.booking}`);
+    const bookingId = selectedNotification?.data?.booking_id || selectedNotification?.booking;
+    if (bookingId) {
+      navigate(`/provider-dashboard/bookings/${bookingId}`);
       setShowDetailsModal(false);
     }
   };
@@ -514,7 +515,7 @@ const NotificationBell = () => {
               >
                 Close
               </button>
-              {selectedNotification.booking && (
+              {(selectedNotification?.data?.booking_id || selectedNotification?.booking) && (
                 <button
                   onClick={handleViewBooking}
                   className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all shadow-lg"

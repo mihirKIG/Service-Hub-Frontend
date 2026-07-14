@@ -26,6 +26,7 @@ const ProviderList = lazy(() => import('@pages/provider/ProviderList'));
 const ProviderDetail = lazy(() => import('@pages/provider/ProviderDetail'));
 const BookService = lazy(() => import('@pages/booking/BookService'));
 const BookingSuccess = lazy(() => import('@pages/booking/BookingSuccess'));
+const BookingDetail = lazy(() => import('@pages/booking/BookingDetail'));
 const Checkout = lazy(() => import('@pages/payment/Checkout'));
 const PaymentHistory = lazy(() => import('@pages/payment/PaymentHistory'));
 const PaymentSuccess = lazy(() => import('@pages/payment/PaymentSuccess'));
@@ -96,6 +97,7 @@ const AppRouter = () => {
               {/* Booking Routes - Protected */}
               <Route path="/book/:providerId" element={<BookService />} />
               <Route path="/book-service/:serviceId" element={<BookService />} />
+              <Route path="/bookings/:id" element={<BookingDetail />} />
               <Route path="/booking/success" element={<BookingSuccess />} />
               
               <Route path={ROUTES.PAYMENT} element={<Checkout />} />
