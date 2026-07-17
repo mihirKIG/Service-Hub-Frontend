@@ -5,8 +5,6 @@ import { useService } from '../../hooks/useServices';
 import { fetchProviderById } from '@features/providers/providerSlice';
 import { bookingApi } from '../../api/bookingApi';
 import { paymentApi } from '../../api/paymentApi';
-import { useAuth } from '@context/AuthContext';
-import Sidebar from '../../components/layout/Sidebar';
 import Loading from '../../components/common/Loading';
 import PaymentModal from '../../components/common/PaymentModal';
 import toast from 'react-hot-toast';
@@ -16,7 +14,6 @@ const BookService = () => {
   const { serviceId, providerId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { sidebarOpen } = useAuth();
   const { service, loading: serviceLoading } = useService(serviceId);
   const { currentProvider } = useSelector((state) => state.providers);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -46,17 +43,6 @@ const BookService = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
   const [paymentLoading, setPaymentLoading] = useState(false);
-
-  // Check authentication
-  useEffect(() => {
-    if (!isAuthenticated) {
-      toast.error('Please login to book a service', {
-        duration: 3000,
-        icon: '🔒',
-      });
-      navigate('/login', { state: { from: `/book-service/${serviceId || providerId}` } });
-    }
-  }, [isAuthenticated, navigate, serviceId, providerId]);
 
   useEffect(() => {
     if (service) {
@@ -99,12 +85,20 @@ const BookService = () => {
   };
 
   const calculateTotalAmount = () => {
-    if (!service) return 0;
-    
-    if (service.pricing_type === 'hourly' && formData.duration_hours) {
-      return parseFloat(service.hourly_rate) * parseFloat(formData.duration_hours);
-    } else if (service.pricing_type === 'fixed') {
-      return parseFloat(service.base_price);
+    if (service) {
+      if (service.pricing_type === 'hourly' && formData.duration_hours) {
+        return parseFloat(service.hourly_rate) * parseFloat(formData.duration_hours);
+      } else if (service.pricing_type === 'fixed') {
+        return parseFloat(service.base_price);
+      }
+    }
+    if (currentProvider) {
+      if (currentProvider.hourly_rate && formData.duration_hours) {
+        return parseFloat(currentProvider.hourly_rate) * parseFloat(formData.duration_hours);
+      }
+      if (currentProvider.starting_price) {
+        return parseFloat(currentProvider.starting_price);
+      }
     }
     return 0;
   };
@@ -128,6 +122,15 @@ const BookService = () => {
     setPaymentLoading(true);
     
     try {
+      // Resolve provider ID from multiple sources
+      const resolvedProviderId = service?.provider?.id || currentProvider?.id || providerId;
+
+      if (!resolvedProviderId) {
+        toast.error('Provider information missing');
+        setPaymentLoading(false);
+        return;
+      }
+
       // Initiate SSLCommerz payment
       const paymentData = {
         booking_id: null, // Will be created after payment
@@ -136,7 +139,7 @@ const BookService = () => {
         customer_email: user?.email,
         customer_phone: user?.phone || '01700000000',
         customer_address: formData.service_address || 'Dhaka, Bangladesh',
-        payment_method: selectedPaymentMethod, // bkash, nagad, rocket, card, bank
+        payment_method: selectedPaymentMethod,
       };
 
       const response = await paymentApi.initiatePayment(paymentData);
@@ -145,7 +148,7 @@ const BookService = () => {
         // Store booking data in localStorage to retrieve after payment
         localStorage.setItem('pending_booking', JSON.stringify({
           ...formData,
-          provider_id: service.provider.id,
+          provider_id: parseInt(resolvedProviderId, 10),
           total_amount: totalAmount,
           tran_id: response.data.tran_id,
           payment_id: response.data.payment_id,
@@ -166,14 +169,7 @@ const BookService = () => {
   };
 
   if (serviceLoading) {
-    return (
-      <div className="flex">
-        {isAuthenticated && <Sidebar />}
-        <div className={`flex-1 flex justify-center items-center h-96 transition-all duration-300 ${isAuthenticated && sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-          <Loading />
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   // Show booking form if we have either service or provider
@@ -181,21 +177,14 @@ const BookService = () => {
 
   if (!canShowBookingForm) {
     return (
-      <div className="flex">
-        {isAuthenticated && <Sidebar />}
-        <div className={`flex-1 transition-all duration-300 ${isAuthenticated && sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-800 mb-4">Service Not Found</h1>
-              <button
-                onClick={() => navigate('/services')}
-                className="text-blue-600 hover:underline"
-              >
-                Browse All Services
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">Service Not Found</h1>
+        <button
+          onClick={() => navigate('/services')}
+          className="text-blue-600 hover:underline"
+        >
+          Browse All Services
+        </button>
       </div>
     );
   }
@@ -206,81 +195,72 @@ const BookService = () => {
   const displayImage = service?.image || currentProvider?.cover_image;
 
   return (
-    <div className="flex">
-      {isAuthenticated && <Sidebar />}
-      
-      <div className={`flex-1 transition-all duration-300 ${isAuthenticated && sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-          <div className="container mx-auto px-4 py-8">
-            <div className="max-w-6xl mx-auto">
-              {/* Service Details */}
-              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                {displayImage && (
-                  <img
-                    src={displayImage}
-                    alt={displayTitle}
-                    className="w-full h-64 object-cover rounded-lg mb-4"
-                  />
-                )}
-                
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">{displayTitle}</h1>
-                <p className="text-gray-600 mb-4">
-                  {service?.description || currentProvider?.description}
-                </p>
-                
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center">
-                    <FiStar className="text-yellow-500 mr-1" />
-                    <span className="font-semibold">
-                      {service?.average_rating || currentProvider?.average_rating || 'N/A'}
-                    </span>
-                    <span className="text-gray-500 ml-1">
-                      ({service?.provider?.total_reviews || currentProvider?.total_reviews || 0} reviews)
-                    </span>
-                  </div>
-                </div>
+    <div className="max-w-6xl mx-auto">
+      {/* Service Details */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="grid md:grid-cols-2 gap-6">
+      <div>
+        {displayImage && (
+          <img
+            src={displayImage}
+            alt={displayTitle}
+            className="w-full h-64 object-cover rounded-lg mb-4"
+          />
+        )}
+        
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">{displayTitle}</h1>
+        <p className="text-gray-600 mb-4">
+          {service?.description || currentProvider?.description}
+        </p>
+        
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center">
+            <FiStar className="text-yellow-500 mr-1" />
+            <span className="font-semibold">
+              {service?.average_rating || currentProvider?.average_rating || 'N/A'}
+            </span>
+            <span className="text-gray-500 ml-1">
+              ({service?.provider?.total_reviews || currentProvider?.total_reviews || 0} reviews)
+            </span>
+          </div>
+        </div>
 
-                <div className="space-y-2 text-gray-700">
-                  <div className="flex items-center">
-                    <FiUser className="mr-2" />
-                    <span>Provider: {service?.provider?.business_name || currentProvider?.business_name}</span>
-                  </div>
-                  {(service?.provider?.city || currentProvider?.location) && (
-                    <div className="flex items-center">
-                      <FiMapPin className="mr-2" />
-                      <span>{service?.provider?.city || currentProvider?.location}</span>
-                    </div>
-                  )}
-                  {service && (
-                    <>
-                      <div className="flex items-center">
-                        <FiDollarSign className="mr-2" />
-                        <span className="font-bold text-xl">
-                          ${service.pricing_type === 'hourly' ? service.hourly_rate : service.base_price}
-                          {service.pricing_type === 'hourly' && ' /hr'}
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <FiClock className="mr-2" />
-                        <span>
-                          {service.is_remote && 'Remote'} 
-                          {service.is_remote && service.is_onsite && ' / '}
-                          {service.is_onsite && 'On-site'}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                  {currentProvider && !service && (
-                    <div className="flex items-center">
-                      <FiDollarSign className="mr-2" />
-                      <span className="font-bold text-xl">
-                        Starting from ${currentProvider.starting_price || 'Contact for price'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
+        <div className="space-y-2 text-gray-700">
+          <div className="flex items-center">
+            <FiUser className="mr-2" />
+            <span>Provider: {service?.provider?.business_name || currentProvider?.business_name}</span>
+          </div>
+          {(service?.provider?.city || currentProvider?.location) && (
+            <div className="flex items-center">
+              <FiMapPin className="mr-2" />
+              <span>{service?.provider?.city || currentProvider?.location}</span>
+            </div>
+          )}
+          <div className="flex items-center">
+            <FiDollarSign className="mr-2" />
+            <span className="font-bold text-xl">
+              {service ? (
+                <>
+                  ৳{service.pricing_type === 'hourly' ? service.hourly_rate : service.base_price}
+                  {service.pricing_type === 'hourly' && ' /hr'}
+                </>
+              ) : currentProvider ? (
+                <>Starting from ৳{currentProvider.starting_price || 'Contact for price'}</>
+              ) : ''}
+            </span>
+          </div>
+          {service && (service.is_remote || service.is_onsite) && (
+            <div className="flex items-center">
+              <FiClock className="mr-2" />
+              <span>
+                {service.is_remote && 'Remote'} 
+                {service.is_remote && service.is_onsite && ' / '}
+                {service.is_onsite && 'On-site'}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
 
               {/* Booking Form */}
               <div className="bg-gray-50 rounded-lg p-6">
@@ -413,40 +393,52 @@ const BookService = () => {
                   </div>
 
                   {/* Price Estimate */}
-                  {formData.duration_hours && service.pricing_type === 'hourly' && (
-                    <div className="bg-blue-50 p-4 rounded-md">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Estimated Cost:</span>
-                        <span className="text-2xl font-bold text-blue-600">
-                          ${(parseFloat(service.hourly_rate) * parseFloat(formData.duration_hours)).toFixed(2)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-600 mt-1">
-                        ৳{service.hourly_rate}/hr × {formData.duration_hours} hours
-                      </p>
-                      <div className="mt-2 pt-2 border-t border-blue-200">
-                        <p className="text-sm text-gray-600">
-                          Advance Payment (10%): <span className="font-semibold text-blue-700">৳{(parseFloat(service.hourly_rate) * parseFloat(formData.duration_hours) * 0.10).toFixed(2)}</span>
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  {(() => {
+                    const hourlyRate = service?.hourly_rate || currentProvider?.hourly_rate;
+                    const basePrice = service?.base_price || currentProvider?.starting_price;
+                    const pricingType = service?.pricing_type || (hourlyRate ? 'hourly' : 'fixed');
 
-                  {service.pricing_type === 'fixed' && (
-                    <div className="bg-blue-50 p-4 rounded-md mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Total Cost:</span>
-                        <span className="text-2xl font-bold text-blue-600">
-                          ৳{parseFloat(service.base_price).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-blue-200">
-                        <p className="text-sm text-gray-600">
-                          Advance Payment (10%): <span className="font-semibold text-blue-700">৳{(parseFloat(service.base_price) * 0.10).toFixed(2)}</span>
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                    if (pricingType === 'hourly' && formData.duration_hours && hourlyRate) {
+                      return (
+                        <div className="bg-blue-50 p-4 rounded-md">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-700">Estimated Cost:</span>
+                            <span className="text-2xl font-bold text-blue-600">
+                              ৳{(parseFloat(hourlyRate) * parseFloat(formData.duration_hours)).toFixed(2)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">
+                            ৳{hourlyRate}/hr × {formData.duration_hours} hours
+                          </p>
+                          <div className="mt-2 pt-2 border-t border-blue-200">
+                            <p className="text-sm text-gray-600">
+                              Advance Payment (10%): <span className="font-semibold text-blue-700">৳{(parseFloat(hourlyRate) * parseFloat(formData.duration_hours) * 0.10).toFixed(2)}</span>
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    if (pricingType === 'fixed' && basePrice) {
+                      return (
+                        <div className="bg-blue-50 p-4 rounded-md mb-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-700">Total Cost:</span>
+                            <span className="text-2xl font-bold text-blue-600">
+                              ৳{parseFloat(basePrice).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="mt-2 pt-2 border-t border-blue-200">
+                            <p className="text-sm text-gray-600">
+                              Advance Payment (10%): <span className="font-semibold text-blue-700">৳{(parseFloat(basePrice) * 0.10).toFixed(2)}</span>
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })()}
 
                   <button
                     type="submit"
@@ -495,19 +487,16 @@ const BookService = () => {
               </div>
             </div>
           )}
-            </div>
 
-            {/* Payment Modal */}
-            <PaymentModal
-              isOpen={showPaymentModal}
-              onClose={() => setShowPaymentModal(false)}
-              amount={totalAmount}
-              serviceName={service?.title}
-              onPayment={handlePayment}
-              loading={paymentLoading}
-            />
-        </div>
-      </div>
+          {/* Payment Modal */}
+          <PaymentModal
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            amount={totalAmount}
+            serviceName={service?.title}
+            onPayment={handlePayment}
+            loading={paymentLoading}
+          />
     </div>
   );
 };

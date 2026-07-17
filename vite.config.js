@@ -22,11 +22,9 @@ export default defineConfig({
   },
 
   server: {
-    host: '0.0.0.0',        // 🔑 REQUIRED on Windows
+    host: '0.0.0.0',
     port: 3000,
     strictPort: true,
-
-    // 🔥 THIS is the real fix
     allowedHosts: true,
 
     proxy: {
@@ -37,6 +35,19 @@ export default defineConfig({
       '/ws': {
         target: 'ws://localhost:8000',
         ws: true,
+      }
+    }
+  },
+
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          redux: ['@reduxjs/toolkit', 'react-redux'],
+        }
       }
     }
   }

@@ -167,6 +167,10 @@ const OrderCard = ({ order, onAccept, onReject, onStatusUpdate }) => {
     }
   };
 
+  const customerName = order.customer?.full_name || order.customer?.first_name
+    ? `${order.customer?.first_name || ''} ${order.customer?.last_name || ''}`.trim()
+    : order.customer?.phone || 'Customer';
+
   return (
     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-blue-300 transition-colors">
       <div className="grid md:grid-cols-3 gap-4">
@@ -174,9 +178,9 @@ const OrderCard = ({ order, onAccept, onReject, onStatusUpdate }) => {
         <div>
           <p className="text-xs text-gray-500 mb-2">Customer</p>
           <div className="flex items-center">
-            <Avatar src={order.customer?.avatar} alt={order.customer?.name} size="sm" />
+            <Avatar src={order.customer?.profile_picture} alt={customerName} size="sm" />
             <div className="ml-2">
-              <p className="font-medium text-gray-900">{order.customer?.name}</p>
+              <p className="font-medium text-gray-900">{customerName}</p>
               <p className="text-xs text-gray-500 flex items-center">
                 <FiPhone className="w-3 h-3 mr-1" />
                 {order.customer?.phone}
@@ -188,8 +192,8 @@ const OrderCard = ({ order, onAccept, onReject, onStatusUpdate }) => {
         {/* Service Info */}
         <div>
           <p className="text-xs text-gray-500 mb-2">Service</p>
-          <p className="font-medium text-gray-900">{order.service?.name}</p>
-          <p className="text-sm text-gray-600">৳{order.service?.price}</p>
+          <p className="font-medium text-gray-900">{order.service_title}</p>
+          <p className="text-sm text-gray-600">৳{order.total_amount}</p>
         </div>
 
         {/* Schedule & Location */}
@@ -197,11 +201,11 @@ const OrderCard = ({ order, onAccept, onReject, onStatusUpdate }) => {
           <p className="text-xs text-gray-500 mb-2">Schedule</p>
           <p className="text-sm text-gray-900">
             <FiClock className="inline w-4 h-4 mr-1" />
-            {order.scheduledDate} at {order.scheduledTime}
+            {order.booking_date} at {order.start_time}
           </p>
           <p className="text-sm text-gray-600 mt-1">
             <FiMapPin className="inline w-4 h-4 mr-1" />
-            {order.location}
+            {order.service_address}
           </p>
         </div>
       </div>

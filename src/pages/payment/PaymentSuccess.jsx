@@ -41,22 +41,54 @@ const PaymentSuccess = () => {
           if (validationResponse.data.success) {
             setPayment(validationResponse.data.payment);
 
-            // Create booking after successful payment
-            try {
-              const bookingResponse = await bookingApi.createBooking({
-                ...pendingBooking,
-                payment_transaction_id: tranId,
-                payment_status: 'advance_paid',
+            // Validate that we have required booking data
+            if (!pendingBooking.provider_id) {
+              console.error('Missing provider_id in pending booking data');
+              setBooking({
+                id: 'ERROR-' + Date.now(),
+                service_name: pendingBooking.service_title || 'Service',
+                total_amount: pendingBooking.total_amount || 0,
+                message: 'Booking data incomplete - provider missing',
               });
+              setSuccess(true);
+              toast.error('Booking creation needs support help. Payment is confirmed.');
+              return;
+            }
 
-              setBooking(bookingResponse.data);
+            // Create booking after successful payment - retry up to 2 times
+            let bookingCreated = false;
+            for (let attempt = 1; attempt <= 2; attempt++) {
+              try {
+                const bookingResponse = await bookingApi.createBooking({
+                  ...pendingBooking,
+                  payment_transaction_id: tranId,
+                  payment_status: 'advance_paid',
+                });
+
+                setBooking(bookingResponse.data);
+                setSuccess(true);
+                bookingCreated = true;
+                toast.success('Payment successful! Booking confirmed.');
+                break;
+              } catch (bookingError) {
+                console.error(`Booking creation attempt ${attempt} failed:`, bookingError);
+                if (attempt < 2) {
+                  // Wait 1 second before retry
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+              }
+            }
+
+            if (!bookingCreated) {
+              setBooking({
+                id: tranId,
+                service_name: pendingBooking.service_title || 'Service',
+                total_amount: pendingBooking.total_amount || 0,
+                payment_id: validationResponse.data.payment?.id,
+                message: 'Payment confirmed but booking creation failed. Please contact support with your transaction ID.',
+              });
               setSuccess(true);
-              toast.success('Payment successful! Booking confirmed.');
-            } catch (bookingError) {
-              console.error('Booking creation failed:', bookingError);
-              setPayment(validationResponse.data.payment);
-              setSuccess(true);
-              toast.success('Payment successful! Please contact support for booking confirmation.');
+              toast.error('Payment confirmed! Contact support to confirm your booking.', { duration: 8000 });
             }
 
             localStorage.removeItem('pending_booking');
@@ -77,12 +109,12 @@ const PaymentSuccess = () => {
           
           setBooking({
             id: 'DEMO-' + Date.now(),
-            service_name: pendingBooking.service_name || 'Service',
+            service_name: pendingBooking.service_name || pendingBooking.service_title || 'Service',
             total_amount: pendingBooking.total_amount || 1000,
             advance_paid: ((pendingBooking.total_amount || 1000) * 0.10).toFixed(2),
             remaining_amount: ((pendingBooking.total_amount || 1000) * 0.90).toFixed(2),
-            service_date: pendingBooking.service_date || new Date().toISOString().split('T')[0],
-            service_time: pendingBooking.service_time || '10:00',
+            service_date: pendingBooking.service_date || pendingBooking.booking_date || new Date().toISOString().split('T')[0],
+            service_time: pendingBooking.service_time || pendingBooking.start_time || '10:00',
             payment_transaction_id: tranId,
           });
           

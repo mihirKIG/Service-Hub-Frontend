@@ -397,8 +397,13 @@ const providerManagementSlice = createSlice({
       })
       .addCase(fetchProviderOrders.fulfilled, (state, action) => {
         state.ordersLoading = false;
-        state.myOrders = action.payload.data;
-        state.ordersPagination = action.payload.pagination || state.ordersPagination;
+        const payload = action.payload;
+        state.myOrders = payload.results || payload.data || (Array.isArray(payload) ? payload : []);
+        state.ordersPagination = {
+          total: payload.count || 0,
+          next: payload.next,
+          previous: payload.previous,
+        } || state.ordersPagination;
       })
       .addCase(fetchProviderOrders.rejected, (state, action) => {
         state.ordersLoading = false;
