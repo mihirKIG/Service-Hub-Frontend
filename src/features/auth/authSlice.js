@@ -34,6 +34,24 @@ export const register = createAsyncThunk(
   }
 );
 
+export const loginWithGoogle = createAsyncThunk(
+  'auth/loginWithGoogle',
+  async ({ token }, { rejectWithValue }) => {
+    try {
+      const response = await authApi.googleLogin(token);
+      const { access, refresh, user } = response.data;
+
+      storage.setAccessToken(access);
+      storage.setRefreshToken(refresh);
+      storage.setUser(user);
+
+      return { user, tokens: { access, refresh } };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Google login failed');
+    }
+  }
+);
+
 export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
@@ -107,6 +125,21 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         toast.error('Registration failed');
+      })
+      // Login with Google
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        toast.error(action.payload?.detail || 'Google login failed');
       })
       // Logout
       .addCase(logout.fulfilled, (state) => {

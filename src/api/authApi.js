@@ -33,6 +33,14 @@ export const authApi = {
   googleLogin: (token) => 
     axiosClient.post('/users/google/', { token }),
 
+  // Email/password login
+  login: (credentials) =>
+    axiosClient.post('/users/login/', credentials),
+
+  // Register
+  register: (userData) =>
+    axiosClient.post('/users/register/', userData),
+
   // Admin login with phone and password
   adminLogin: (phone, password) =>
     axiosClient.post('/users/admin-login/', { 
