@@ -240,7 +240,14 @@ const OTPTestPage = () => {
               <li>• OTP expires in 2 minutes (120 seconds)</li>
               <li>• Each OTP can only be used once</li>
               <li>• Check browser console for detailed logs</li>
-              <li>• SMS logs available in Django admin: http://127.0.0.1:8000/admin/notifications/smslog/</li>
+              <li>• SMS logs available in Django admin: {" "}
+  <a
+    href={`${import.meta.env.VITE_ADMIN_URL}notifications/smslog/`}
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    SMS Logs
+  </a></li>
             </ul>
           </div>
         </div>

@@ -47,7 +47,7 @@ const AdminLoginModal = ({ isOpen, onClose }) => {
         
         // Navigate to admin dashboard
         setTimeout(() => {
-          window.location.href = 'http://127.0.0.1:8000/admin/';
+          window.location.href = import.meta.env.VITE_ADMIN_URL;
         }, 500);
       } else {
         toast.error(result.error || 'Invalid admin credentials');
