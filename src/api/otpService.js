@@ -23,8 +23,7 @@ export const sendOTP = async (phoneNumber) => {
       const message = errorData.message || errorData.error || errorData.detail || 'Failed to send OTP';
       throw { message };
     } else if (error.request) {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-      throw { message: `Cannot connect to server. Please check if the backend is reachable at ${apiUrl}` };
+      throw { message: 'Cannot connect to server. Please check if backend is running on http://127.0.0.1:8000' };
     } else {
       throw { message: error.message || 'Failed to send OTP' };
     }
@@ -143,8 +142,7 @@ export const googleLogin = async (idToken, firebaseUser) => {
     
     // Handle network error
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-      throw { message: `🔌 Cannot connect to backend. Please ensure the server is reachable at ${apiUrl}` };
+      throw { message: '🔌 Cannot connect to backend. Please ensure Django server is running at http://127.0.0.1:8000' };
     }
     
     if (error.response?.data) {

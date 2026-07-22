@@ -47,8 +47,7 @@ const BecomeProvider = () => {
                             !error?.response;
       
       if (isNetworkError) {
-        const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-        setError(`Cannot connect to backend server. Please make sure it's reachable at ${apiUrl}`);
+        setError('Cannot connect to backend server. Please make sure the backend is running on http://127.0.0.1:8000');
       } else if (error?.response?.status === 404) {
         setError('Service posts endpoint not found. Please check backend URL configuration.');
       } else {

@@ -173,14 +173,9 @@ const BookService = () => {
       console.log('🔵 payment initiation response:', response?.data);
 
       if (response && response.data && response.data.success) {
-        // Store booking data keyed by tran_id, not a single shared key -
-        // localStorage is shared across every tab of this origin, so a
-        // second booking started in another tab before this one's SSLCommerz
-        // redirect completes would otherwise overwrite this one's pending
-        // data, and the success page would come back with the WRONG (or
-        // no) booking to create.
+        // Store booking data in localStorage to retrieve after payment
         try {
-          localStorage.setItem(`pending_booking_${response.data.tran_id}`, JSON.stringify({
+          localStorage.setItem('pending_booking', JSON.stringify({
             ...formData,
             provider_id: parseInt(resolvedProviderId, 10),
             total_amount: amountNumber,
