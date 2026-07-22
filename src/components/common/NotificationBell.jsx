@@ -3,6 +3,8 @@ import { FiBell, FiCheck, FiCheckCircle, FiX, FiMapPin, FiUser, FiCalendar, FiCl
 import { notificationApi } from '@api/notificationApi';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAuth } from '@context/AuthContext';
+import useNotificationSocket from '@hooks/useNotificationSocket';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -13,6 +15,8 @@ const NotificationBell = () => {
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isProvider = user?.role === 'provider';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -49,6 +53,14 @@ const NotificationBell = () => {
       loadNotifications();
     }
   }, [showDropdown]);
+
+  // Real-time push: instantly reflect notifications created on the backend
+  // (e.g. a new booking) instead of waiting for the next 30s poll.
+  useNotificationSocket((notification) => {
+    setNotifications((prev) => [notification, ...prev]);
+    setUnreadCount((prev) => prev + 1);
+    toast.success(notification.title || 'নতুন notification এসেছে', { icon: '🔔' });
+  });
 
   const loadNotifications = async () => {
     setLoading(true);
@@ -95,7 +107,9 @@ const NotificationBell = () => {
   const handleViewBooking = () => {
     const bookingId = selectedNotification?.data?.booking_id || selectedNotification?.booking;
     if (bookingId) {
-      navigate(`/provider-dashboard/bookings/${bookingId}`);
+      // There's no per-booking detail route for providers yet, so send them
+      // to the orders list (customers have a real /bookings/:id page).
+      navigate(isProvider ? '/provider/orders' : `/bookings/${bookingId}`);
       setShowDetailsModal(false);
     }
   };
@@ -296,7 +310,9 @@ const NotificationBell = () => {
             <div className="bg-gray-50 p-3 text-center border-t border-gray-200">
               <button
                 onClick={() => {
-                  navigate('/provider-dashboard/notifications');
+                  // Providers don't have a dedicated notifications page yet;
+                  // their orders list is the closest equivalent.
+                  navigate(isProvider ? '/provider/orders' : '/notifications');
                   setShowDropdown(false);
                 }}
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"

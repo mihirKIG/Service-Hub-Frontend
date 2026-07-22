@@ -45,18 +45,25 @@ const BookService = () => {
   const [paymentLoading, setPaymentLoading] = useState(false);
 
   useEffect(() => {
+    // service_description is a required, non-blank field on the backend
+    // (bookings/models.py) but this form never shows it as an editable
+    // field - it's populated automatically here. If the source service/
+    // provider has no description on file, this used to send an empty
+    // string and the booking would always fail with a 400 on submit.
     if (service) {
+      const title = service.title;
       setFormData((prev) => ({
         ...prev,
-        service_title: service.title,
-        service_description: service.short_description || service.description,
+        service_title: title,
+        service_description: service.short_description || service.description || title || 'Service booking request',
       }));
     } else if (currentProvider && !serviceId) {
       // If coming from provider page, use provider's business name
+      const title = currentProvider.business_name || 'Service Booking';
       setFormData((prev) => ({
         ...prev,
-        service_title: currentProvider.business_name,
-        service_description: currentProvider.description,
+        service_title: title,
+        service_description: currentProvider.description || `Booking request for ${title}`,
       }));
     }
   }, [service, currentProvider, serviceId]);
@@ -107,6 +114,14 @@ const BookService = () => {
     e.preventDefault();
     setError(null);
 
+    // service_title/service_description are required by the backend but
+    // aren't editable inputs on this form - guard here too in case they
+    // weren't populated yet (e.g. service/provider data still loading).
+    if (!formData.service_title?.trim() || !formData.service_description?.trim()) {
+      toast.error('Service details are still loading. Please wait a moment and try again.');
+      return;
+    }
+
     // Calculate total amount
     const amount = calculateTotalAmount();
     if (amount <= 0) {
@@ -122,6 +137,9 @@ const BookService = () => {
     setPaymentLoading(true);
     
     try {
+      console.log('🔵 handlePayment called with method:', selectedPaymentMethod);
+      console.log('🔵 formData:', formData);
+      console.log('🔵 totalAmount (before):', totalAmount);
       // Resolve provider ID from multiple sources
       const resolvedProviderId = service?.provider?.id || currentProvider?.id || providerId;
 
@@ -131,40 +149,66 @@ const BookService = () => {
         return;
       }
 
+      // Ensure total amount is a valid positive number
+      const amountNumber = parseFloat(totalAmount);
+      if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
+        toast.error('Invalid payment amount. Please re-check booking details.');
+        setPaymentLoading(false);
+        return;
+      }
+
       // Initiate SSLCommerz payment
       const paymentData = {
         booking_id: null, // Will be created after payment
-        total_amount: totalAmount,
+        total_amount: amountNumber,
         customer_name: user?.full_name || user?.email,
         customer_email: user?.email,
         customer_phone: user?.phone || '01700000000',
         customer_address: formData.service_address || 'Dhaka, Bangladesh',
         payment_method: selectedPaymentMethod,
       };
+      console.log('🔵 initiating payment with data:', paymentData);
 
       const response = await paymentApi.initiatePayment(paymentData);
+      console.log('🔵 payment initiation response:', response?.data);
 
-      if (response.data.success) {
+      if (response && response.data && response.data.success) {
         // Store booking data in localStorage to retrieve after payment
-        localStorage.setItem('pending_booking', JSON.stringify({
-          ...formData,
-          provider_id: parseInt(resolvedProviderId, 10),
-          total_amount: totalAmount,
-          tran_id: response.data.tran_id,
-          payment_id: response.data.payment_id,
-          payment_method: selectedPaymentMethod,
-        }));
+        try {
+          localStorage.setItem('pending_booking', JSON.stringify({
+            ...formData,
+            provider_id: parseInt(resolvedProviderId, 10),
+            total_amount: amountNumber,
+            tran_id: response.data.tran_id,
+            payment_id: response.data.payment_id,
+            payment_method: selectedPaymentMethod,
+          }));
+        } catch (storeErr) {
+          console.error('Error storing pending booking:', storeErr);
+        }
 
-        // Redirect to SSLCommerz payment gateway
-        window.location.href = response.data.gateway_url;
+        // Redirect to SSLCommerz payment gateway if URL provided
+        if (response.data.gateway_url) {
+          window.location.href = response.data.gateway_url;
+        } else {
+          toast.error('Payment gateway URL not provided by server');
+          setPaymentLoading(false);
+        }
       } else {
-        toast.error('Failed to initiate payment');
+        const msg = response?.data?.message || 'Failed to initiate payment';
+        console.error('Payment initiation failed:', msg, response?.data);
+        toast.error(msg);
+        setPaymentLoading(false);
       }
     } catch (err) {
       console.error('Payment error:', err);
-      toast.error(err.response?.data?.message || 'Failed to process payment');
+      const message = err?.response?.data?.message || err?.message || 'Failed to process payment';
+      toast.error(message);
     } finally {
-      setPaymentLoading(false);
+      // Ensure loading flag is cleared in all cases (if redirection didn't occur)
+      if (typeof window !== 'undefined' && window.location && !window.location.href.includes('ssl')) {
+        setPaymentLoading(false);
+      }
     }
   };
 
@@ -453,11 +497,11 @@ const BookService = () => {
           </div>
 
           {/* Service FAQs */}
-          {service.faqs && service.faqs.length > 0 && (
+          {service?.faqs?.length > 0 && (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Frequently Asked Questions</h3>
               <div className="space-y-4">
-                {service.faqs.map((faq) => (
+                {service?.faqs?.map((faq) => (
                   <div key={faq.id} className="border-b border-gray-200 pb-4 last:border-0">
                     <h4 className="font-semibold text-gray-800 mb-2">{faq.question}</h4>
                     <p className="text-gray-600">{faq.answer}</p>
@@ -468,11 +512,11 @@ const BookService = () => {
           )}
 
           {/* Service Images */}
-          {service.images && service.images.length > 0 && (
+          {service?.images?.length > 0 && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Gallery</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {service.images.map((img) => (
+                {service?.images?.map((img) => (
                   <div key={img.id} className="relative">
                     <img
                       src={img.image}

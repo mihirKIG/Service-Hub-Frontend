@@ -34,12 +34,17 @@ export const useServices = (filters = {}) => {
 
 export const useService = (id) => {
   const [service, setService] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (id) {
       fetchService();
+    } else {
+      // No id provided -> not loading and no service
+      setService(null);
+      setError(null);
+      setLoading(false);
     }
   }, [id]);
 

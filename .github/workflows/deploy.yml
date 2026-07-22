@@ -31,3 +31,5 @@ jobs:
             rm -rf /var/www/frontend/*
 
             cp -r dist/* /var/www/frontend/
+
+            sudo systemctl reload nginx

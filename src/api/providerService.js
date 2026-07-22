@@ -44,7 +44,7 @@ export const submitProviderApplication = async (applicationData) => {
  * Get my provider applications
  */
 export const getMyApplications = async () => {
-  const response = await axiosClient.get('/provider-applications/my-applications');
+  const response = await axiosClient.get('/provider-applications/my-applications/');
   return response.data;
 };
 
@@ -53,7 +53,7 @@ export const getMyApplications = async () => {
  * @param {number} id - Application ID
  */
 export const getApplication = async (id) => {
-  const response = await axiosClient.get(`/provider-applications/${id}`);
+  const response = await axiosClient.get(`/provider-applications/${id}/`);
   return response.data;
 };
 
@@ -65,7 +65,7 @@ export const getApplication = async (id) => {
  * Get provider dashboard statistics
  */
 export const getProviderDashboardStats = async () => {
-  const response = await axiosClient.get('/provider/dashboard/stats');
+  const response = await axiosClient.get('/provider/dashboard/stats/');
   return response.data;
 };
 
@@ -74,7 +74,7 @@ export const getProviderDashboardStats = async () => {
  * @param {string} period - 'week', 'month', or 'year'
  */
 export const getProviderEarningsGraph = async (period = 'week') => {
-  const response = await axiosClient.get('/provider/earnings/graph', {
+  const response = await axiosClient.get('/provider/earnings/graph/', {
     params: { period }
   });
   return response.data;
@@ -89,7 +89,7 @@ export const getProviderEarningsGraph = async (period = 'week') => {
  * @param {Object} params - Query parameters (isActive)
  */
 export const getMyServices = async (params = {}) => {
-  const response = await axiosClient.get('/provider/services', { params });
+  const response = await axiosClient.get('/provider/services/', { params });
   return response.data;
 };
 
@@ -98,7 +98,7 @@ export const getMyServices = async (params = {}) => {
  * @param {number} id - Service ID
  */
 export const getService = async (id) => {
-  const response = await axiosClient.get(`/provider/services/${id}`);
+  const response = await axiosClient.get(`/provider/services/${id}/`);
   return response.data;
 };
 
@@ -107,7 +107,7 @@ export const getService = async (id) => {
  * @param {Object} serviceData - Service data
  */
 export const createService = async (serviceData) => {
-  const response = await axiosClient.post('/provider/services', serviceData);
+  const response = await axiosClient.post('/provider/services/create/', serviceData);
   return response.data;
 };
 
@@ -117,7 +117,7 @@ export const createService = async (serviceData) => {
  * @param {Object} serviceData - Updated service data
  */
 export const updateService = async (id, serviceData) => {
-  const response = await axiosClient.put(`/provider/services/${id}`, serviceData);
+  const response = await axiosClient.put(`/provider/services/${id}/`, serviceData);
   return response.data;
 };
 
@@ -126,7 +126,7 @@ export const updateService = async (id, serviceData) => {
  * @param {number} id - Service ID
  */
 export const deleteService = async (id) => {
-  const response = await axiosClient.delete(`/provider/services/${id}`);
+  const response = await axiosClient.delete(`/provider/services/${id}/delete/`);
   return response.data;
 };
 
@@ -135,7 +135,7 @@ export const deleteService = async (id) => {
  * @param {number} id - Service ID
  */
 export const toggleServiceStatus = async (id) => {
-  const response = await axiosClient.patch(`/provider/services/${id}/toggle-status`);
+  const response = await axiosClient.patch(`/provider/services/${id}/toggle-status/`);
   return response.data;
 };
 
@@ -148,7 +148,7 @@ export const toggleServiceStatus = async (id) => {
  * @param {Object} params - Query parameters (status, page, limit)
  */
 export const getProviderOrders = async (params = {}) => {
-  const response = await axiosClient.get('/provider/orders', { params });
+  const response = await axiosClient.get('/provider/orders/', { params });
   return response.data;
 };
 
@@ -157,7 +157,7 @@ export const getProviderOrders = async (params = {}) => {
  * @param {number} id - Order ID
  */
 export const getProviderOrder = async (id) => {
-  const response = await axiosClient.get(`/provider/orders/${id}`);
+  const response = await axiosClient.get(`/provider/orders/${id}/`);
   return response.data;
 };
 
@@ -166,7 +166,7 @@ export const getProviderOrder = async (id) => {
  * @param {number} id - Order ID
  */
 export const acceptOrder = async (id) => {
-  const response = await axiosClient.post(`/provider/orders/${id}/accept`);
+  const response = await axiosClient.post(`/provider/orders/${id}/accept/`);
   return response.data;
 };
 
@@ -176,7 +176,7 @@ export const acceptOrder = async (id) => {
  * @param {string} reason - Rejection reason
  */
 export const rejectOrder = async (id, reason) => {
-  const response = await axiosClient.post(`/provider/orders/${id}/reject`, { reason });
+  const response = await axiosClient.post(`/provider/orders/${id}/reject/`, { reason });
   return response.data;
 };
 
@@ -186,7 +186,7 @@ export const rejectOrder = async (id, reason) => {
  * @param {string} status - New status ('on_the_way', 'in_progress', 'completed')
  */
 export const updateOrderStatus = async (id, status) => {
-  const response = await axiosClient.patch(`/provider/orders/${id}/status`, { status });
+  const response = await axiosClient.patch(`/provider/orders/${id}/status/`, { status });
   return response.data;
 };
 
@@ -196,7 +196,7 @@ export const updateOrderStatus = async (id, status) => {
  * @param {Object} data - Work proof data (images, notes)
  */
 export const uploadWorkProof = async (id, data) => {
-  const response = await axiosClient.post(`/provider/orders/${id}/work-proof`, data);
+  const response = await axiosClient.post(`/provider/orders/${id}/work-proof/`, data);
   return response.data;
 };
 
@@ -206,7 +206,7 @@ export const uploadWorkProof = async (id, data) => {
  * @param {string} reason - Cancellation reason
  */
 export const cancelOrder = async (id, reason) => {
-  const response = await axiosClient.post(`/provider/orders/${id}/cancel`, { reason });
+  const response = await axiosClient.post(`/provider/orders/${id}/cancel/`, { reason });
   return response.data;
 };
 
@@ -219,7 +219,7 @@ export const cancelOrder = async (id, reason) => {
  * @param {Object} params - Query parameters (startDate, endDate, status)
  */
 export const getEarningsHistory = async (params = {}) => {
-  const response = await axiosClient.get('/provider/earnings', { params });
+  const response = await axiosClient.get('/provider/earnings/', { params });
   return response.data;
 };
 
@@ -227,7 +227,7 @@ export const getEarningsHistory = async (params = {}) => {
  * Get earnings summary
  */
 export const getEarningsSummary = async () => {
-  const response = await axiosClient.get('/provider/earnings/summary');
+  const response = await axiosClient.get('/provider/earnings/summary/');
   return response.data;
 };
 
@@ -239,7 +239,7 @@ export const getEarningsSummary = async () => {
  * Get provider profile
  */
 export const getProviderProfile = async () => {
-  const response = await axiosClient.get('/provider/profile');
+  const response = await axiosClient.get('/provider/profile/');
   return response.data;
 };
 
@@ -248,7 +248,7 @@ export const getProviderProfile = async () => {
  * @param {Object} profileData - Updated profile data
  */
 export const updateProviderProfile = async (profileData) => {
-  const response = await axiosClient.put('/provider/profile', profileData);
+  const response = await axiosClient.put('/provider/profile/update/', profileData);
   return response.data;
 };
 
@@ -266,7 +266,7 @@ export const uploadFile = async (file, type = 'image') => {
   formData.append('file', file);
   formData.append('type', type);
 
-  const response = await axiosClient.post('/upload', formData, {
+  const response = await axiosClient.post('/upload/', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -292,7 +292,7 @@ export const uploadMultipleFiles = async (files, type = 'image') => {
  * Check user role status
  */
 export const checkRoleStatus = async () => {
-  const response = await axiosClient.get('/auth/role-status');
+  const response = await axiosClient.get('/users/role-status/');
   return response.data;
 };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { paymentApi } from '@api/paymentApi';
 import { bookingApi } from '@api/bookingApi';
@@ -8,6 +8,27 @@ import Loading from '@components/common/Loading';
 import { FiCheckCircle, FiAlertCircle, FiDownload } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
+// The real Booking API (BookingSerializer) returns service_title,
+// booking_date, start_time, advance_payment - not the service_name /
+// service_date / service_time / advance_paid names this page renders.
+// Map real bookings into the shape the page below expects so the
+// confirmation card actually shows real data instead of blanks/NaN.
+const toBookingView = (realBooking) => {
+  const totalAmount = parseFloat(realBooking.total_amount) || 0;
+  const advancePaid = realBooking.advance_payment != null
+    ? parseFloat(realBooking.advance_payment)
+    : totalAmount * 0.10;
+  return {
+    id: realBooking.id,
+    service_name: realBooking.service_title,
+    service_date: realBooking.booking_date,
+    service_time: realBooking.start_time,
+    total_amount: totalAmount,
+    advance_paid: advancePaid.toFixed(2),
+    remaining_amount: (totalAmount - advancePaid).toFixed(2),
+  };
+};
+
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -15,8 +36,19 @@ const PaymentSuccess = () => {
   const [success, setSuccess] = useState(false);
   const [booking, setBooking] = useState(null);
   const [payment, setPayment] = useState(null);
+  const [failedTranId, setFailedTranId] = useState(null);
+  const hasRunRef = useRef(false);
 
   useEffect(() => {
+    // Guard against React StrictMode's dev-only double-invoke (and any
+    // accidental remount): this effect reads pending_booking from
+    // localStorage and clears it after creating the booking, so running it
+    // twice makes the second pass see an already-cleared value and report a
+    // false "booking data incomplete" error even though the first pass
+    // succeeded.
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
+
     const validatePayment = async () => {
       const tranId = searchParams.get('tran_id');
       const valId = searchParams.get('val_id') || searchParams.get('value_a');
@@ -41,17 +73,35 @@ const PaymentSuccess = () => {
           if (validationResponse.data.success) {
             setPayment(validationResponse.data.payment);
 
-            // Validate that we have required booking data
+            // pending_booking is consumed (cleared) once a booking is
+            // successfully created for this transaction. If this page loads
+            // again for the same tran_id - a refresh, a duplicate tab, using
+            // the browser back/forward buttons - localStorage will already
+            // be empty. That does NOT mean the booking failed: check whether
+            // this payment already got linked to a real booking
+            // (bookings/serializers.py links Payment.booking on create) and
+            // show that instead of a false "missing data" error.
             if (!pendingBooking.provider_id) {
-              console.error('Missing provider_id in pending booking data');
-              setBooking({
-                id: 'ERROR-' + Date.now(),
-                service_name: pendingBooking.service_title || 'Service',
-                total_amount: pendingBooking.total_amount || 0,
-                message: 'Booking data incomplete - provider missing',
-              });
-              setSuccess(true);
-              toast.error('Booking creation needs support help. Payment is confirmed.');
+              const existingBookingId = validationResponse.data.payment?.booking;
+              if (existingBookingId) {
+                try {
+                  const existing = await bookingApi.getBookingById(existingBookingId);
+                  setBooking(toBookingView(existing.data));
+                  setSuccess(true);
+                  toast.success('Payment successful! Booking confirmed.');
+                  return;
+                } catch (fetchError) {
+                  console.error('Failed to fetch existing booking:', fetchError);
+                }
+              }
+
+              console.error('Missing provider_id in pending booking data and no existing booking found for this transaction');
+              setSuccess(false);
+              setFailedTranId(tranId);
+              toast.error(
+                `Payment confirmed but we couldn't find your booking details. Contact support with transaction ID: ${tranId}`,
+                { duration: 8000 }
+              );
               return;
             }
 
@@ -65,7 +115,7 @@ const PaymentSuccess = () => {
                   payment_status: 'advance_paid',
                 });
 
-                setBooking(bookingResponse.data);
+                setBooking(toBookingView(bookingResponse.data));
                 setSuccess(true);
                 bookingCreated = true;
                 toast.success('Payment successful! Booking confirmed.');
@@ -79,48 +129,33 @@ const PaymentSuccess = () => {
               }
             }
 
-            if (!bookingCreated) {
-              setBooking({
-                id: tranId,
-                service_name: pendingBooking.service_title || 'Service',
-                total_amount: pendingBooking.total_amount || 0,
-                payment_id: validationResponse.data.payment?.id,
-                message: 'Payment confirmed but booking creation failed. Please contact support with your transaction ID.',
-              });
-              setSuccess(true);
+            if (bookingCreated) {
+              localStorage.removeItem('pending_booking');
+            } else {
+              // Keep pending_booking so a page refresh can retry instead of
+              // losing the booking details entirely.
+              setSuccess(false);
+              setFailedTranId(tranId);
               toast.error('Payment confirmed! Contact support to confirm your booking.', { duration: 8000 });
             }
-
-            localStorage.removeItem('pending_booking');
           } else {
             setSuccess(false);
             toast.error('Payment validation failed');
           }
         } catch (error) {
+          // Payment validation itself failed (network/CORS/5xx) - we do NOT
+          // know if the booking/payment actually went through, so we must
+          // not claim success. Fabricating a fake "DEMO-..." booking here
+          // previously made the customer see "Payment Successful" while no
+          // Booking row (and therefore no provider notification) was ever
+          // created - the leading cause of "provider never gets notified".
           console.error('Payment validation error:', error);
-          
-          // DEMO MODE: Backend unavailable - show success anyway
-          setPayment({
-            tran_id: tranId,
-            amount: pendingBooking.total_amount || 1000,
-            advance_amount: ((pendingBooking.total_amount || 1000) * 0.10).toFixed(2),
-            status: 'success',
-          });
-          
-          setBooking({
-            id: 'DEMO-' + Date.now(),
-            service_name: pendingBooking.service_name || pendingBooking.service_title || 'Service',
-            total_amount: pendingBooking.total_amount || 1000,
-            advance_paid: ((pendingBooking.total_amount || 1000) * 0.10).toFixed(2),
-            remaining_amount: ((pendingBooking.total_amount || 1000) * 0.90).toFixed(2),
-            service_date: pendingBooking.service_date || pendingBooking.booking_date || new Date().toISOString().split('T')[0],
-            service_time: pendingBooking.service_time || pendingBooking.start_time || '10:00',
-            payment_transaction_id: tranId,
-          });
-          
-          setSuccess(true);
-          toast.success('Payment received! (Demo mode - Backend unavailable)', { duration: 5000 });
-          localStorage.removeItem('pending_booking');
+          setSuccess(false);
+          setFailedTranId(tranId);
+          toast.error(
+            `We couldn't confirm your payment. If money was deducted, contact support with transaction ID: ${tranId}`,
+            { duration: 8000 }
+          );
         }
       } catch (error) {
         console.error('General error:', error);
@@ -280,6 +315,11 @@ const PaymentSuccess = () => {
                   <br />
                   • ২৪ ঘণ্টায় টাকা ফেরত পাবেন
                 </p>
+                {failedTranId && (
+                  <p className="text-xs text-blue-700 mt-3 font-mono">
+                    Transaction ID: {failedTranId}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
