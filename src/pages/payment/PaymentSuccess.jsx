@@ -60,8 +60,10 @@ const PaymentSuccess = () => {
       }
 
       try {
-        // Get pending booking data from localStorage
-        const pendingBooking = JSON.parse(localStorage.getItem('pending_booking') || '{}');
+        // Keyed by tran_id (see BookService.jsx) so a booking started in
+        // another tab can never clobber this one's pending data.
+        const pendingBookingKey = `pending_booking_${tranId}`;
+        const pendingBooking = JSON.parse(localStorage.getItem(pendingBookingKey) || '{}');
 
         // Try to validate with backend
         try {
@@ -130,7 +132,7 @@ const PaymentSuccess = () => {
             }
 
             if (bookingCreated) {
-              localStorage.removeItem('pending_booking');
+              localStorage.removeItem(pendingBookingKey);
             } else {
               // Keep pending_booking so a page refresh can retry instead of
               // losing the booking details entirely.

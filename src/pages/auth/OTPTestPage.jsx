@@ -105,7 +105,7 @@ const OTPTestPage = () => {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h1 className="text-3xl font-bold mb-2">OTP Authentication Test</h1>
           <p className="text-gray-600 mb-4">
-            Backend: <code className="bg-gray-100 px-2 py-1 rounded">http://127.0.0.1:8000/api</code>
+            Backend: <code className="bg-gray-100 px-2 py-1 rounded">{import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}</code>
           </p>
           <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
             <p className="text-sm text-yellow-800">
